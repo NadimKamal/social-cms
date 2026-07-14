@@ -22,9 +22,7 @@ require_once INCLUDE_PATH . '/header.php';
 
         <a href="<?= url('pages/students/create.php') ?>"
             class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg shadow">
-
             + Add Student
-
         </a>
 
     </div>
@@ -51,9 +49,7 @@ require_once INCLUDE_PATH . '/header.php';
             <button
                 id="clearFilterBtn"
                 class="bg-gray-700 text-white px-5 py-2 rounded-lg">
-
                 Clear
-
             </button>
 
         </div>
@@ -72,15 +68,11 @@ require_once INCLUDE_PATH . '/header.php';
                 <th class="px-4 py-3 w-20">#</th>
 
                 <th class="px-4 py-3">
-
                     Picture
-
                 </th>
 
                 <th class="px-4 py-3">
-
                     Title
-
                 </th>
 
                 <th class="px-4 py-3">

@@ -1,24 +1,20 @@
 <nav class="bg-white shadow">
 
-    <div class="max-w-7xl mx-auto px-6">
+    <div class="px-8 h-16 flex justify-between items-center">
 
-        <div class="flex justify-between items-center h-16">
+        <div>
 
-            <div class="text-2xl font-bold text-blue-600">
-                Social CMS
-            </div>
+            <span class="text-xl font-bold text-blue-600">
 
-            <div class="space-x-6">
+                AI Social CMS
 
-                <a href="<?= url('index.php') ?>" class="text-gray-700 hover:text-blue-600">
-                    Dashboard
-                </a>
+            </span>
 
-                <a href="<?= url('pages/students/index.php') ?>" class="text-gray-700 hover:text-blue-600">
-                    Students
-                </a>
+        </div>
 
-            </div>
+        <div class="text-gray-600">
+
+            Administrator
 
         </div>
 
