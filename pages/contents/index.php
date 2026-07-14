@@ -359,7 +359,7 @@ function renderCard(row) {
                             :
                             `
                             <button
-                                onclick="generatePost('${row.uuid}')"
+                                onclick="openGeneratePostModal('${row.uuid}')"
                                 class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded text-sm">
                                 Gen Post
                             </button>
@@ -409,8 +409,405 @@ function escapeHtml(text) {
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
 }
+
 </script>
 
+
+<!-- =======================================================
+Generate Social Post Modal
+======================================================= -->
+
+<div
+    id="generatePostModal"
+    class="fixed inset-0 bg-black/60 hidden z-50 overflow-y-auto">
+
+    <div class="min-h-screen flex items-center justify-center p-8">
+
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-5xl">
+
+            <!-- Header -->
+
+            <div class="flex justify-between items-center border-b px-6 py-4">
+
+                <h2 class="text-2xl font-bold">
+
+                    Generate Social Post
+
+                </h2>
+
+                <button
+                    onclick="closeGeneratePostModal()"
+                    class="text-2xl text-gray-500 hover:text-red-600">
+
+                    &times;
+
+                </button>
+
+            </div>
+
+            <!-- Body -->
+
+            <div class="p-6 space-y-6">
+
+                <input
+                    type="hidden"
+                    id="modal_content_uuid">
+
+                <!-- Caption -->
+
+                <div>
+
+                    <label class="font-medium">
+
+                        Caption
+
+                    </label>
+
+                    <textarea
+                        id="modal_caption"
+                        rows="6"
+                        class="w-full border rounded-lg px-4 py-3 mt-2"></textarea>
+
+                </div>
+
+                <!-- Image Prompt -->
+
+                <div>
+
+                    <label class="font-medium">
+
+                        Image Prompt
+
+                    </label>
+
+                    <textarea
+                        id="modal_image_prompt"
+                        rows="4"
+                        class="w-full border rounded-lg px-4 py-3 mt-2"></textarea>
+
+                </div>
+
+                <!-- Image -->
+
+                <div>
+
+                    <label class="font-medium">
+
+                        Generated Image
+
+                    </label>
+
+                    <div
+                        class="border rounded-lg p-5 mt-2 bg-gray-50">
+
+                        <img
+                            id="modal_image_preview"
+                            src=""
+                            class="hidden rounded-lg w-full max-h-96 object-cover">
+
+                        <div
+                            id="modal_image_placeholder"
+                            class="text-center text-gray-400 py-16">
+
+                            No image generated.
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- Video Prompt -->
+
+                <div>
+
+                    <label class="font-medium">
+
+                        Video Prompt
+
+                    </label>
+
+                    <textarea
+                        id="modal_video_prompt"
+                        rows="4"
+                        class="w-full border rounded-lg px-4 py-3 mt-2"></textarea>
+
+                </div>
+
+                <!-- Video -->
+
+                <div>
+
+                    <label class="font-medium">
+
+                        Generated Video
+
+                    </label>
+
+                    <div
+                        class="border rounded-lg p-5 mt-2 bg-gray-50">
+
+                        <video
+
+                            id="modal_video_preview"
+
+                            controls
+
+                            class="hidden w-full rounded-lg">
+
+                        </video>
+
+                        <div
+                            id="modal_video_placeholder"
+                            class="text-center text-gray-400 py-16">
+
+                            No video generated.
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- Hashtags -->
+
+                <div>
+
+                    <label class="font-medium">
+
+                        Hashtags
+
+                    </label>
+
+                    <textarea
+                        id="modal_hashtags"
+                        rows="3"
+                        class="w-full border rounded-lg px-4 py-3 mt-2"></textarea>
+
+                </div>
+
+                <!-- Keywords -->
+
+                <div>
+
+                    <label class="font-medium">
+
+                        SEO Keywords
+
+                    </label>
+
+                    <textarea
+                        id="modal_keywords"
+                        rows="3"
+                        class="w-full border rounded-lg px-4 py-3 mt-2"></textarea>
+
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+
+            <div
+                class="border-t px-6 py-4 flex justify-end gap-3">
+
+                <button
+
+                    id="generateAgainBtn"
+
+                    class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-lg">
+
+                    Generate Again
+
+                </button>
+
+                <button
+
+                    id="generateImageBtn"
+
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg">
+
+                    Generate Image
+
+                </button>
+
+                <button
+
+                    id="generateVideoBtn"
+
+                    class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg">
+
+                    Generate Video
+
+                </button>
+
+                <button
+
+                    id="savePostBtn"
+
+                    class="bg-gray-900 hover:bg-black text-white px-5 py-2 rounded-lg">
+
+                    Save
+
+                </button>
+
+                <button
+
+                    onclick="closeGeneratePostModal()"
+
+                    class="bg-gray-300 hover:bg-gray-400 px-5 py-2 rounded-lg">
+
+                    Close
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div
+
+    id="postLoading"
+
+    class="fixed inset-0 bg-black/50 hidden z-[60]">
+
+    <div class="flex items-center justify-center h-full">
+
+        <div class="bg-white rounded-xl px-10 py-8 shadow-xl">
+
+            <svg
+
+                class="animate-spin h-10 w-10 mx-auto text-purple-600"
+
+                viewBox="0 0 24 24">
+
+                <circle
+
+                    cx="12"
+
+                    cy="12"
+
+                    r="10"
+
+                    stroke="currentColor"
+
+                    stroke-width="4"
+
+                    fill="none"
+
+                    opacity=".2">
+
+                </circle>
+
+                <path
+
+                    d="M22 12A10 10 0 0012 2"
+
+                    stroke="currentColor"
+
+                    stroke-width="4">
+
+                </path>
+
+            </svg>
+
+            <p class="mt-5">
+
+                Gemini is generating social content...
+
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    const modal = qs('#generatePostModal');
+
+    async function openGeneratePostModal(uuid)
+    {
+        const modal = qs('#generatePostModal');
+
+        modal.classList.remove('hidden');
+
+        qs('#modal_content_uuid').value = uuid;
+
+        qs('#modal_caption').value = '';
+        qs('#modal_image_prompt').value = '';
+        qs('#modal_video_prompt').value = '';
+        qs('#modal_hashtags').value = '';
+        qs('#modal_keywords').value = '';
+
+        showPostLoading();
+
+        try{
+
+            const form = new FormData();
+
+            form.append('uuid', uuid);
+
+            const response = await fetch(
+                APP_URL + 'api/social-posts/generate-caption.php',
+
+                {
+                    method:'POST',
+                    body:form
+                }
+
+            );
+
+            const data = await response.json();
+
+            hidePostLoading();
+
+            if(!data.success){
+
+                alert(data.message);
+
+                return;
+
+            }
+
+            qs('#modal_caption').value=data.data.caption;
+
+            qs('#modal_image_prompt').value=data.data.image_prompt;
+
+            qs('#modal_video_prompt').value=data.data.video_prompt;
+
+            qs('#modal_hashtags').value=data.data.hashtags;
+
+            qs('#modal_keywords').value=data.data.keywords;
+
+        }
+
+        catch(e){
+            hidePostLoading();
+            alert('Unable to connect.');
+
+        }
+
+    }
+
+    function closeGeneratePostModal()
+    {
+        modal.classList.add('hidden');
+    }
+
+    function showPostLoading()
+    {
+        qs('#postLoading').classList.remove('hidden');
+    }
+
+    function hidePostLoading()
+    {
+        qs('#postLoading').classList.add('hidden');
+    }
+</script>
 <?php
 require_once INCLUDE_PATH . '/footer.php';
 ?>

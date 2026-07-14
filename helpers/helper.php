@@ -317,6 +317,19 @@ if (!function_exists('findByUuidOrFail')) {
 
 }
 
+function apiSuccess(array $data = [], string $message = ''): void
+{
+    header('Content-Type: application/json');
+
+    echo json_encode([
+        'success' => true,
+        'message' => $message,
+        'data'    => $data
+    ]);
+
+    exit;
+}
+
 if (!function_exists('find')) {
 
     function find(PDO $pdo, string $table, array $where = [], string $columns = '*')
