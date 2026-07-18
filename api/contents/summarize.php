@@ -7,7 +7,6 @@ if (!is_post()) {
 }
 
 $text = trim($_POST['original_text'] ?? '');
-
 if ($text == '') {
     errorResponse('Original text is required.');
 }
@@ -25,7 +24,6 @@ Instructions:
 - Ignore greetings, advertisements, sponsor messages, and repeated sentences.
 Return only the summary text.
 ";
-
 $result = geminiCall(
     $system,
     $text,
@@ -34,9 +32,7 @@ $result = geminiCall(
 );
 
 if (!$result['success']) {
-
     errorResponse($result['error']);
-
 }
 
 successResponse([

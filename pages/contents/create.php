@@ -181,9 +181,7 @@ ORDER BY title
                     type="button"
                     id="summarizeBtn"
                     class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg">
-
-                    ✨ Generate AI Summary
-
+                    Generate AI Summary
                 </button>
 
             </div>

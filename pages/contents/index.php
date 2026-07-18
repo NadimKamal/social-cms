@@ -8,7 +8,6 @@ require_once INCLUDE_PATH . '/header.php';
 | Load Categories
 |--------------------------------------------------------------------------
 */
-
 $categories = $pdo->query("
     SELECT
         id,
@@ -138,20 +137,137 @@ $categories = $pdo->query("
         </div>
     </div>
 
+    <!-- Bulk Action Bar -->
+    <div id="bulkActionBar" class="bg-white border rounded-xl shadow p-4 mb-6">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <div class="font-medium">
+                <span id="selectedCount">0</span> content(s) selected
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="clearSelection()" 
+                        class="px-5 py-2 rounded bg-gray-200 hover:bg-gray-300">
+                    Clear
+                </button>
+
+                <button onclick="generateSelectedPost()" 
+                        class="px-6 py-2 rounded bg-purple-600 hover:bg-purple-700 text-white">
+                    Generate Social Post
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Grid -->
     <div id="contentGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"></div>
 
     <!-- Pagination -->
     <div id="pagination" class="flex justify-between items-center mt-8"></div>
 
+    <!-- Generate Social Post Modal -->
+    <div id="generatePostModal" class="fixed inset-0 bg-black/60 hidden z-50 overflow-y-auto">
+        <div class="min-h-screen flex items-center justify-center p-8">
+            <div class="bg-white rounded-xl shadow-xl w-full max-w-5xl">
+
+                <!-- Header -->
+                <div class="flex justify-between items-center border-b px-6 py-4">
+                    <h2 class="text-2xl font-bold">Generate Social Post</h2>
+                    <button onclick="closeGeneratePostModal()" 
+                            class="text-3xl text-gray-500 hover:text-red-600">&times;</button>
+                </div>
+
+                <!-- Body -->
+                <div class="p-6 space-y-6">
+                    <input type="hidden" id="modal_image_path">
+
+                    <!-- Caption -->
+                    <div>
+                        <label class="font-medium">Caption</label>
+                        <textarea id="modal_caption" rows="7" 
+                                  class="w-full border rounded-lg px-4 py-3 mt-2"></textarea>
+                    </div>
+
+                    <!-- Generated Image -->
+                    <div>
+                        <label class="font-medium">Generated Image</label>
+                        <div class="border rounded-lg p-5 mt-2 bg-gray-50">
+                            <img id="modal_image_preview" src="" 
+                                 class="hidden rounded-lg w-full max-h-[450px] object-cover">
+                            <div id="modal_image_placeholder" 
+                                 class="text-center text-gray-400 py-20">
+                                No image generated.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hashtags -->
+                    <div>
+                        <label class="font-medium">Hashtags</label>
+                        <textarea id="modal_hashtags" rows="3" 
+                                  class="w-full border rounded-lg px-4 py-3 mt-2"></textarea>
+                    </div>
+
+                    <!-- Keywords -->
+                    <div>
+                        <label class="font-medium">SEO Keywords</label>
+                        <textarea id="modal_keywords" rows="3" 
+                                  class="w-full border rounded-lg px-4 py-3 mt-2"></textarea>
+                    </div>
+
+                    <!-- Status -->
+                    <div>
+                        <label class="font-medium">Status</label>
+                        <select id="modal_status" 
+                                class="w-full border rounded-lg px-4 py-3 mt-2">
+                            <option value="Draft" selected>Draft</option>
+                            <option value="Ready">Ready</option>
+                            <option value="Published">Published</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="border-t px-6 py-4 flex justify-end gap-3">
+                    <button onclick="generateSelectedPost()" 
+                            class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-lg">
+                        Generate Again
+                    </button>
+                    <button onclick="saveGeneratedPost()" 
+                            class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg">
+                        Save Post
+                    </button>
+                    <button onclick="closeGeneratePostModal()" 
+                            class="bg-gray-300 hover:bg-gray-400 px-5 py-2 rounded-lg">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="postLoading" class="fixed inset-0 bg-black/50 hidden z-[60]">
+        <div class="flex items-center justify-center h-full">
+            <div class="bg-white rounded-xl px-10 py-8 shadow-xl text-center">
+                <svg class="animate-spin h-10 w-10 mx-auto text-purple-600" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity=".2"></circle>
+                    <path d="M22 12A10 10 0 0012 2" stroke="currentColor" stroke-width="4"></path>
+                </svg>
+                <p class="mt-5 text-gray-700">
+                    Gemini is generating your social media post...
+                </p>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
 const Endpoint = "<?= url('api/contents/get-data.php') ?>";
-
 const grid = qs('#contentGrid');
 const rowsInput = qs('#numberOfRowsPerPage');
 const filters = qsa('.filterable_input');
+let selectedContents = [];
 
 window.onload = () => {
     index();
@@ -162,7 +278,6 @@ window.onload = () => {
 | Events
 |--------------------------------------------------------------------------
 */
-
 rowsInput.addEventListener('change', index);
 
 filters.forEach(item => {
@@ -172,9 +287,7 @@ filters.forEach(item => {
 
 qs('#clearFilterBtn').onclick = function() {
     rowsInput.value = 9;
-    filters.forEach(item => {
-        item.value = '';
-    });
+    filters.forEach(item => item.value = '');
     index();
 };
 
@@ -183,11 +296,8 @@ qs('#clearFilterBtn').onclick = function() {
 | Load Data
 |--------------------------------------------------------------------------
 */
-
 async function index(page = 1) {
-    let query = '';
-    query += 'rows_per_page=' + rowsInput.value;
-    query += '&page=' + page;
+    let query = `rows_per_page=${rowsInput.value}&page=${page}`;
 
     let filterColumns = '';
     filters.forEach(item => {
@@ -195,22 +305,18 @@ async function index(page = 1) {
     });
     query += '&filterable_columns=' + filterColumns;
 
-    grid.innerHTML = `
-        <div class="col-span-full text-center py-16">
-            Loading...
-        </div>
-    `;
+    grid.innerHTML = `<div class="col-span-full text-center py-16">Loading...</div>`;
 
     const response = await fetch(Endpoint + '?' + query);
     const data = await response.json();
 
-    // Statistics
+    // Update Statistics
     qs('#totalContents').innerText = data.records.total;
     qs('#completedContents').innerText = data.statistics.completed;
     qs('#pendingContents').innerText = data.statistics.pending;
     qs('#failedContents').innerText = data.statistics.failed;
 
-    // Cards
+    // Render Cards
     grid.innerHTML = '';
 
     if (data.records.data.length === 0) {
@@ -220,12 +326,9 @@ async function index(page = 1) {
                     <h2 class="text-xl font-semibold">No content found</h2>
                     <p class="text-gray-500 mt-2">Try changing your search filters.</p>
                 </div>
-            </div>
-        `;
+            </div>`;
     } else {
-        data.records.data.forEach(row => {
-            renderCard(row);
-        });
+        data.records.data.forEach(row => renderCard(row));
     }
 
     renderPagination(data.records.current_page, data.records.last_page);
@@ -236,70 +339,42 @@ async function index(page = 1) {
 | Pagination
 |--------------------------------------------------------------------------
 */
-
 function renderPagination(current, last) {
-    let html = `
-        <div class="text-sm text-gray-500">
-            Page ${current} of ${last}
-        </div>
-        <div class="space-x-2">
-    `;
+    let html = `<div class="text-sm text-gray-500">Page ${current} of ${last}</div><div class="space-x-2">`;
 
     if (current > 1) {
-        html += `
-            <button onclick="index(${current-1})" 
-                    class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">
-                Previous
-            </button>
-        `;
+        html += `<button onclick="index(${current-1})" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Previous</button>`;
     }
-
     if (current < last) {
-        html += `
-            <button onclick="index(${current+1})" 
-                    class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                Next
-            </button>
-        `;
+        html += `<button onclick="index(${current+1})" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Next</button>`;
     }
 
     html += '</div>';
     qs('#pagination').innerHTML = html;
 }
-</script>
 
-<script>
 /*
 |--------------------------------------------------------------------------
 | Render Content Card
 |--------------------------------------------------------------------------
 */
-
 function renderCard(row) {
     const image = row.image_path 
         ? asset(row.image_path) 
-        : asset('assets/images/no-image.png');
+        : asset('assets/images/default/no-image.png');
 
     const categoryBadge = `
         <span class="px-3 py-1 rounded-full text-xs font-medium text-white" 
               style="background:${row.category_color ?? '#2563eb'}">
             ${row.category_name ?? 'Unknown'}
-        </span>
-    `;
+        </span>`;
 
     let statusBadge = '';
     switch (row.status) {
-        case 'Completed':
-            statusBadge = `<span class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-medium">Completed</span>`;
-            break;
-        case 'Processing':
-            statusBadge = `<span class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-medium">Processing</span>`;
-            break;
-        case 'Failed':
-            statusBadge = `<span class="px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-medium">Failed</span>`;
-            break;
-        default:
-            statusBadge = `<span class="px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-medium">Pending</span>`;
+        case 'Completed': statusBadge = `<span class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-medium">Completed</span>`; break;
+        case 'Processing': statusBadge = `<span class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-medium">Processing</span>`; break;
+        case 'Failed': statusBadge = `<span class="px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-medium">Failed</span>`; break;
+        default: statusBadge = `<span class="px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-medium">Pending</span>`;
     }
 
     grid.innerHTML += `
@@ -341,42 +416,27 @@ function renderCard(row) {
 
             <!-- Footer -->
             <div class="border-t mt-5 pt-4">
-                <div class="flex justify-between items-center">
-                    <span class="text-xs text-gray-500">
-                        ${CUSTOM_DATE_TIME(row.created_at)}
-                    </span>
-                    <div class="space-x-2">
-                        ${
-                            row.post_generated_at
-                            ?
-                            `
-                            <button
-                                onclick="openGeneratedPost('${row.uuid}')"
-                                class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded text-sm">
-                                View Post
-                            </button>
-                            `
-                            :
-                            `
-                            <button
-                                onclick="openGeneratePostModal('${row.uuid}')"
-                                class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded text-sm">
-                                Gen Post
-                            </button>
-                            `
-                        }
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" class="content_checkbox" value="${row.uuid}" onchange="toggleSelection(this)">
+                            <span>Select</span>
+                        </label>
+                        <div class="mt-2 text-xs text-gray-500">
+                            ${CUSTOM_DATE_TIME(row.created_at)}
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2">
                         <a href="<?= url('pages/contents/view.php?uuid=') ?>${row.uuid}" 
                            class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-sm">
                             View
                         </a>
-                        <!-- <a href="<?= url('pages/contents/edit.php?uuid=') ?>${row.uuid}" 
-                           class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded text-sm">
-                            Edit
-                        </a> -->
+
                         <a href="<?= url('pages/contents/delete.php?uuid=') ?>${row.uuid}" 
-                           onclick="return confirm('Delete this content?')" 
+                           onclick="return confirm('Delete this content?')"
                            class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-sm">
-                            Del
+                            Delete
                         </a>
                     </div>
                 </div>
@@ -390,13 +450,10 @@ function renderCard(row) {
 | Helper Functions
 |--------------------------------------------------------------------------
 */
-
 function truncate(text, length = 120) {
     if (!text) return '';
     text = text.replace(/(<([^>]+)>)/ig, '');
-    if (text.length <= length) {
-        return escapeHtml(text);
-    }
+    if (text.length <= length) return escapeHtml(text);
     return escapeHtml(text.substring(0, length)) + '...';
 }
 
@@ -410,403 +467,176 @@ function escapeHtml(text) {
         .replace(/'/g, "&#039;");
 }
 
-</script>
-
-
-<!-- =======================================================
-Generate Social Post Modal
-======================================================= -->
-
-<div
-    id="generatePostModal"
-    class="fixed inset-0 bg-black/60 hidden z-50 overflow-y-auto">
-
-    <div class="min-h-screen flex items-center justify-center p-8">
-
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-5xl">
-
-            <!-- Header -->
-
-            <div class="flex justify-between items-center border-b px-6 py-4">
-
-                <h2 class="text-2xl font-bold">
-
-                    Generate Social Post
-
-                </h2>
-
-                <button
-                    onclick="closeGeneratePostModal()"
-                    class="text-2xl text-gray-500 hover:text-red-600">
-
-                    &times;
-
-                </button>
-
-            </div>
-
-            <!-- Body -->
-
-            <div class="p-6 space-y-6">
-
-                <input
-                    type="hidden"
-                    id="modal_content_uuid">
-
-                <!-- Caption -->
-
-                <div>
-
-                    <label class="font-medium">
-
-                        Caption
-
-                    </label>
-
-                    <textarea
-                        id="modal_caption"
-                        rows="6"
-                        class="w-full border rounded-lg px-4 py-3 mt-2"></textarea>
-
-                </div>
-
-                <!-- Image Prompt -->
-
-                <div>
-
-                    <label class="font-medium">
-
-                        Image Prompt
-
-                    </label>
-
-                    <textarea
-                        id="modal_image_prompt"
-                        rows="4"
-                        class="w-full border rounded-lg px-4 py-3 mt-2"></textarea>
-
-                </div>
-
-                <!-- Image -->
-
-                <div>
-
-                    <label class="font-medium">
-
-                        Generated Image
-
-                    </label>
-
-                    <div
-                        class="border rounded-lg p-5 mt-2 bg-gray-50">
-
-                        <img
-                            id="modal_image_preview"
-                            src=""
-                            class="hidden rounded-lg w-full max-h-96 object-cover">
-
-                        <div
-                            id="modal_image_placeholder"
-                            class="text-center text-gray-400 py-16">
-
-                            No image generated.
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <!-- Video Prompt -->
-
-                <div>
-
-                    <label class="font-medium">
-
-                        Video Prompt
-
-                    </label>
-
-                    <textarea
-                        id="modal_video_prompt"
-                        rows="4"
-                        class="w-full border rounded-lg px-4 py-3 mt-2"></textarea>
-
-                </div>
-
-                <!-- Video -->
-
-                <div>
-
-                    <label class="font-medium">
-
-                        Generated Video
-
-                    </label>
-
-                    <div
-                        class="border rounded-lg p-5 mt-2 bg-gray-50">
-
-                        <video
-
-                            id="modal_video_preview"
-
-                            controls
-
-                            class="hidden w-full rounded-lg">
-
-                        </video>
-
-                        <div
-                            id="modal_video_placeholder"
-                            class="text-center text-gray-400 py-16">
-
-                            No video generated.
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <!-- Hashtags -->
-
-                <div>
-
-                    <label class="font-medium">
-
-                        Hashtags
-
-                    </label>
-
-                    <textarea
-                        id="modal_hashtags"
-                        rows="3"
-                        class="w-full border rounded-lg px-4 py-3 mt-2"></textarea>
-
-                </div>
-
-                <!-- Keywords -->
-
-                <div>
-
-                    <label class="font-medium">
-
-                        SEO Keywords
-
-                    </label>
-
-                    <textarea
-                        id="modal_keywords"
-                        rows="3"
-                        class="w-full border rounded-lg px-4 py-3 mt-2"></textarea>
-
-                </div>
-
-            </div>
-
-            <!-- Footer -->
-
-            <div
-                class="border-t px-6 py-4 flex justify-end gap-3">
-
-                <button
-
-                    id="generateAgainBtn"
-
-                    class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-lg">
-
-                    Generate Again
-
-                </button>
-
-                <button
-
-                    id="generateImageBtn"
-
-                    class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg">
-
-                    Generate Image
-
-                </button>
-
-                <button
-
-                    id="generateVideoBtn"
-
-                    class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg">
-
-                    Generate Video
-
-                </button>
-
-                <button
-
-                    id="savePostBtn"
-
-                    class="bg-gray-900 hover:bg-black text-white px-5 py-2 rounded-lg">
-
-                    Save
-
-                </button>
-
-                <button
-
-                    onclick="closeGeneratePostModal()"
-
-                    class="bg-gray-300 hover:bg-gray-400 px-5 py-2 rounded-lg">
-
-                    Close
-
-                </button>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-<div
-
-    id="postLoading"
-
-    class="fixed inset-0 bg-black/50 hidden z-[60]">
-
-    <div class="flex items-center justify-center h-full">
-
-        <div class="bg-white rounded-xl px-10 py-8 shadow-xl">
-
-            <svg
-
-                class="animate-spin h-10 w-10 mx-auto text-purple-600"
-
-                viewBox="0 0 24 24">
-
-                <circle
-
-                    cx="12"
-
-                    cy="12"
-
-                    r="10"
-
-                    stroke="currentColor"
-
-                    stroke-width="4"
-
-                    fill="none"
-
-                    opacity=".2">
-
-                </circle>
-
-                <path
-
-                    d="M22 12A10 10 0 0012 2"
-
-                    stroke="currentColor"
-
-                    stroke-width="4">
-
-                </path>
-
-            </svg>
-
-            <p class="mt-5">
-
-                Gemini is generating social content...
-
-            </p>
-
-        </div>
-
-    </div>
-
-</div>
-
-<script>
-    const modal = qs('#generatePostModal');
-
-    async function openGeneratePostModal(uuid)
+function toggleSelection(el) {
+    if (el.checked) {
+        if (!selectedContents.includes(el.value)) selectedContents.push(el.value);
+    } else {
+        selectedContents = selectedContents.filter(x => x !== el.value);
+    }
+    updateBulkBar();
+}
+
+function updateBulkBar() {
+    qs('#selectedCount').innerText = selectedContents.length;
+    // qs('#bulkActionBar').classList.toggle('hidden', selectedContents.length === 0);
+}
+
+function clearSelection() {
+    selectedContents = [];
+    qsa('.content_checkbox').forEach(cb => cb.checked = false);
+    updateBulkBar();
+}
+async function generateSelectedPost()
+{
+    if (selectedContents.length === 0)
     {
-        const modal = qs('#generatePostModal');
+        alert('Select at least one content.');
+        return;
+    }
+    showPostLoading();
+    try
+    {
+        const form = new FormData();
 
-        modal.classList.remove('hidden');
+        selectedContents.forEach(uuid => {
+            form.append('uuids[]', uuid);
+        });
 
-        qs('#modal_content_uuid').value = uuid;
-
-        qs('#modal_caption').value = '';
-        qs('#modal_image_prompt').value = '';
-        qs('#modal_video_prompt').value = '';
-        qs('#modal_hashtags').value = '';
-        qs('#modal_keywords').value = '';
-
-        showPostLoading();
-
-        try{
-
-            const form = new FormData();
-
-            form.append('uuid', uuid);
-
-            const response = await fetch(
-                APP_URL + 'api/social-posts/generate-caption.php',
-
-                {
-                    method:'POST',
-                    body:form
-                }
-
-            );
-
-            const data = await response.json();
-
-            hidePostLoading();
-
-            if(!data.success){
-
-                alert(data.message);
-
-                return;
-
+        const response = await fetch(
+            APP_URL + 'api/social-posts/generate-post.php',
+            {
+                method: 'POST',
+                body: form
             }
+        );
 
-            qs('#modal_caption').value=data.data.caption;
+        const data = await response.json();
 
-            qs('#modal_image_prompt').value=data.data.image_prompt;
+        hidePostLoading();
 
-            qs('#modal_video_prompt').value=data.data.video_prompt;
-
-            qs('#modal_hashtags').value=data.data.hashtags;
-
-            qs('#modal_keywords').value=data.data.keywords;
-
+        if (!data.success)
+        {
+            alert(data.message);
+            return;
         }
 
-        catch(e){
-            hidePostLoading();
-            alert('Unable to connect.');
+        openGeneratePostModal(data.data);
+    }
+    catch (e)
+    {
+        hidePostLoading();
+        alert('Unable to generate social post.');
+    }
+}
 
+function openGeneratePostModal(post)
+{
+    qs('#generatePostModal').classList.remove('hidden');
+
+    qs('#modal_caption').value = post.caption;
+    qs('#modal_hashtags').value = post.hashtags;
+    qs('#modal_keywords').value = post.keywords;
+    qs('#modal_image_path').value = post.image_path;
+
+    if (post.image_path)
+    {
+        qs('#modal_image_preview').src = asset(post.image_path);
+        qs('#modal_image_preview').classList.remove('hidden');
+        qs('#modal_image_placeholder').classList.add('hidden');
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| Save Generated Social Post
+|--------------------------------------------------------------------------
+*/
+
+async function saveGeneratedPost()
+{
+    
+    try
+    {
+        const form = new FormData();
+
+        selectedContents.forEach(uuid => {
+            form.append('uuids[]', uuid);
+        });
+
+        form.append(
+            'caption',
+            qs('#modal_caption').value
+        );
+
+        form.append(
+            'image_path',
+            qs('#modal_image_path').value
+        );
+
+        form.append(
+            'hashtags',
+            qs('#modal_hashtags').value
+        );
+
+        form.append(
+            'keywords',
+            qs('#modal_keywords').value
+        );
+
+        form.append(
+            'status',
+            qs('#modal_status').value
+        );
+
+        const response = await fetch(
+            APP_URL + 'pages/social-posts/save.php',
+            {
+                method: 'POST',
+                body: form
+            }
+        );
+
+        const data = await response.json();
+
+        if(!data.success)
+        {
+            alert(data.message);
+            return;
         }
 
-    }
+        alert('Social post saved successfully.');
+        closeGeneratePostModal();
+        clearSelection();
 
-    function closeGeneratePostModal()
-    {
-        modal.classList.add('hidden');
+        index();
     }
+    catch(error)
+    {
+        console.error(error);
+        alert('Unable to save social post.');
+    }
+}
 
-    function showPostLoading()
-    {
-        qs('#postLoading').classList.remove('hidden');
-    }
+/*
+|--------------------------------------------------------------------------
+| Modal Helpers
+|--------------------------------------------------------------------------
+*/
 
-    function hidePostLoading()
-    {
-        qs('#postLoading').classList.add('hidden');
-    }
+function showPostLoading()
+{
+    qs('#postLoading').classList.remove('hidden');
+}
+
+function hidePostLoading()
+{
+    qs('#postLoading').classList.add('hidden');
+}
+
+function closeGeneratePostModal()
+{
+    qs('#generatePostModal').classList.add('hidden');
+}
 </script>
 <?php
 require_once INCLUDE_PATH . '/footer.php';

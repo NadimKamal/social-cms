@@ -29,73 +29,24 @@ CREATE TABLE `content_categories` (
 CREATE TABLE `social_accounts` (
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     `uuid` CHAR(32) NOT NULL,
-    `platform`
-    ENUM(
-        'Facebook',
-        'Instagram',
-        'X',
-        'LinkedIn',
-        'YouTube',
-        'Threads'
-    )
-    NOT NULL,
-
-    `account_name`
-    VARCHAR(255)
-    NOT NULL,
-
-    `account_username`
-    VARCHAR(255)
-    NULL,
-
-    `account_email`
-    VARCHAR(255)
-    NULL,
-
-    `account_url`
-    VARCHAR(500)
-    NULL,
-
-    `page_name`
-    VARCHAR(255)
-    NULL,
-
-    `page_url`
-    VARCHAR(500)
-    NULL,
-
-    `access_token`
-    LONGTEXT
-    NULL,
-
-    `refresh_token`
-    LONGTEXT
-    NULL,
-
-    `is_active`
-    TINYINT(1)
-    DEFAULT 1,
-
-    `created_at`
-    TIMESTAMP
-    DEFAULT CURRENT_TIMESTAMP,
-
-    `updated_at`
-    TIMESTAMP
-    DEFAULT CURRENT_TIMESTAMP
-    ON UPDATE CURRENT_TIMESTAMP,
+    `platform` ENUM('Facebook', 'Instagram', 'X', 'LinkedIn', 'YouTube', 'Threads') NOT NULL,
+    `account_name` VARCHAR(255) NOT NULL,
+    `account_username` VARCHAR(255) NULL,
+    `account_email` VARCHAR(255) NULL,
+    `account_url` VARCHAR(500) NULL,
+    `page_name` VARCHAR(255) NULL,
+    `page_url` VARCHAR(500) NULL,
+    `access_token` LONGTEXT NULL,
+    `refresh_token` LONGTEXT NULL,
+    `is_active` TINYINT(1) DEFAULT 1,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     PRIMARY KEY (`id`),
-
     UNIQUE KEY `uk_social_accounts_uuid` (`uuid`),
-
     KEY `idx_platform` (`platform`),
-
     KEY `idx_active` (`is_active`)
-
-) ENGINE=InnoDB
-DEFAULT CHARSET=utf8mb4
-COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 /* contents */
 CREATE TABLE `contents` (
@@ -107,14 +58,7 @@ CREATE TABLE `contents` (
     `image_path` VARCHAR(255) NULL,
     `ai_summary` LONGTEXT NULL,
     `uploaded_by` BIGINT UNSIGNED NULL,
-    `status`
-    ENUM(
-        'Pending',
-        'Processing',
-        'Completed',
-        'Failed'
-    )
-    NOT NULL DEFAULT 'Pending',
+    `status` ENUM('Pending', 'Processing', 'Completed', 'Failed') NOT NULL DEFAULT 'Pending',
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
@@ -127,91 +71,61 @@ CREATE TABLE `contents` (
         REFERENCES `content_categories`(`id`)
         ON UPDATE CASCADE
         ON DELETE RESTRICT
-) ENGINE=InnoDB
-DEFAULT CHARSET=utf8mb4
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+/* social_posts */
+CREATE TABLE social_posts (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    uuid CHAR(36) NOT NULL,
+    caption LONGTEXT NOT NULL,
+    image_path VARCHAR(255) NULL,
+    video_path VARCHAR(255) NULL,
+    hashtags TEXT NULL,
+    keywords TEXT NULL,
+    status ENUM('Draft', 'Ready', 'Published') NOT NULL DEFAULT 'Draft',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_social_posts_uuid (uuid),
+    KEY idx_status (status)
+) ENGINE=InnoDB 
+DEFAULT CHARSET=utf8mb4 
 COLLATE=utf8mb4_unicode_ci;
 
-/* alter table contents */
-ALTER TABLE contents
-ADD COLUMN post_generated_at TIMESTAMP NULL
-AFTER status;
+/* social_post_contents */
+CREATE TABLE social_post_contents (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    social_post_id BIGINT UNSIGNED NOT NULL,
+    content_id BIGINT UNSIGNED NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-/*social_posts*/
-CREATE TABLE `social_posts` (
+    PRIMARY KEY (id),
+    KEY idx_social_post (social_post_id),
+    KEY idx_content (content_id),
 
-    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    CONSTRAINT fk_spc_post
+        FOREIGN KEY (social_post_id)
+        REFERENCES social_posts(id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
 
-    `uuid` CHAR(32) NOT NULL,
-
-    `content_id` BIGINT UNSIGNED NOT NULL,
-
-    `caption` LONGTEXT NOT NULL,
-
-    `image_prompt` LONGTEXT NULL,
-
-    `image_path` VARCHAR(255) NULL,
-
-    `video_prompt` LONGTEXT NULL,
-
-    `video_path` VARCHAR(255) NULL,
-
-    `hashtags` TEXT NULL,
-
-    `keywords` TEXT NULL,
-
-    `status`
-    ENUM(
-        'Draft',
-        'Ready',
-        'Published'
-    )
-    NOT NULL
-    DEFAULT 'Draft',
-
-    `created_at`
-    TIMESTAMP
-    DEFAULT CURRENT_TIMESTAMP,
-
-    `updated_at`
-    TIMESTAMP
-    DEFAULT CURRENT_TIMESTAMP
-    ON UPDATE CURRENT_TIMESTAMP,
-
-    PRIMARY KEY (`id`),
-
-    UNIQUE KEY `uk_social_posts_uuid`
-    (`uuid`),
-
-    UNIQUE KEY `uk_social_posts_content`
-    (`content_id`),
-
-    KEY `idx_status`
-    (`status`),
-
-    CONSTRAINT `fk_social_posts_content`
-    FOREIGN KEY (`content_id`)
-    REFERENCES `contents`(`id`)
-    ON UPDATE CASCADE
-    ON DELETE CASCADE
-
-)
-ENGINE=InnoDB
-DEFAULT CHARSET=utf8mb4
+    CONSTRAINT fk_spc_content
+        FOREIGN KEY (content_id)
+        REFERENCES contents(id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+) ENGINE=InnoDB 
+DEFAULT CHARSET=utf8mb4 
 COLLATE=utf8mb4_unicode_ci;
 
-/* Default_Categories */
-INSERT INTO content_categories
-(uuid,title,description,color,icon,is_active)
+/* Default Categories */
+INSERT INTO content_categories (uuid, title, description, color, icon, is_active)
 VALUES
-
-(MD5(UUID()),'Trending','Trending marketing contents','#ef4444','fire',1),
-
-(MD5(UUID()),'Offer','Offers & Discounts','#10b981','tag',1),
-
-(MD5(UUID()),'Educational','Educational contents','#3b82f6','book-open',1),
-
-(MD5(UUID()),'Awareness','Awareness campaigns','#8b5cf6','megaphone',1),
-
-(MD5(UUID()),'News','Latest news','#f59e0b','newspaper',1),
-
-(MD5(UUID()),'Others','Miscellaneous','#6b7280','folder',1);
+    (MD5(UUID()), 'Trending', 'Trending marketing contents', '#ef4444', 'fire', 1),
+    (MD5(UUID()), 'Offer', 'Offers & Discounts', '#10b981', 'tag', 1),
+    (MD5(UUID()), 'Educational', 'Educational contents', '#3b82f6', 'book-open', 1),
+    (MD5(UUID()), 'Awareness', 'Awareness campaigns', '#8b5cf6', 'megaphone', 1),
+    (MD5(UUID()), 'News', 'Latest news', '#f59e0b', 'newspaper', 1),
+    (MD5(UUID()), 'Others', 'Miscellaneous', '#6b7280', 'folder', 1);

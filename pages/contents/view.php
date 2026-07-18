@@ -49,15 +49,18 @@ $category = findOrFail(
 
             </div>
 
-            <?php if($content['image_path']): ?>
+            <?php
+                $image = !empty($content['image_path'])
+                    ? asset($content['image_path'])
+                    : asset('assets/images/default/no-image.png');
+            ?>
 
-                <img
-                    src="<?= asset($content['image_path']) ?>"
-                    width="200"
-                    height="200"
-                    class="rounded-xl object-cover">
-
-            <?php endif; ?>
+            <img
+                src="<?= $image ?>"
+                width="200"
+                height="200"
+                class="rounded-xl object-cover"
+                onerror="this.onerror=null;this.src='<?= asset('assets/images/default/no-image.png') ?>';">
 
             <div>
 

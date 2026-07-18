@@ -13,7 +13,7 @@ function geminiCall(string $system, string $user, int $maxTokens = 1000, float $
     $apiKey = _geminiApiKey();
     if (!$apiKey) return ['success' => false, 'error' => 'Gemini API key not configured'];
 
-    $model = env('GEMINI_MODEL', 'gemini-2.5-flash');
+    $model = env('GEMINI_TEXT_MODEL', 'gemini-2.5-flash');
     $url   = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
 
     $payload = json_encode([
@@ -24,8 +24,9 @@ function geminiCall(string $system, string $user, int $maxTokens = 1000, float $
             ['role' => 'user', 'parts' => [['text' => $user]]]
         ],
         'generationConfig' => [
+            'temperature' => $temperature,
             'maxOutputTokens' => $maxTokens,
-            'temperature'     => $temperature,
+            'responseMimeType' => 'application/json'
         ],
     ], JSON_UNESCAPED_UNICODE);
 
@@ -42,7 +43,7 @@ function geminiCall(string $system, string $user, int $maxTokens = 1000, float $
     $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $err  = curl_error($ch);
     curl_close($ch);
-
+    
     if ($err)      return ['success' => false, 'error' => 'cURL: ' . $err];
     if ($code !== 200) {
         $b = json_decode($raw, true);

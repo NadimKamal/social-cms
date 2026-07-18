@@ -40,14 +40,12 @@ try {
     }
 
     $allowedPlatforms = [
-
         'Facebook',
         'Instagram',
         'X',
         'LinkedIn',
         'YouTube',
         'Threads'
-
     ];
 
     if (!in_array($platform, $allowedPlatforms)) {
