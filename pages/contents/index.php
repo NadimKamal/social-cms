@@ -3,11 +3,7 @@
 require_once __DIR__ . '/../../bootstrap/app.php';
 require_once INCLUDE_PATH . '/header.php';
 
-/*
-|--------------------------------------------------------------------------
-| Load Categories
-|--------------------------------------------------------------------------
-*/
+/* Load Categories */
 $categories = $pdo->query("
     SELECT
         id,
@@ -20,8 +16,6 @@ $categories = $pdo->query("
 ?>
 
 <div class="max-w-7xl mx-auto px-6 py-8">
-
-    <?php include INCLUDE_PATH . '/flash.php'; ?>
 
     <!-- Header -->
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-5 mb-8">
@@ -36,7 +30,7 @@ $categories = $pdo->query("
 
         <a href="<?= url('pages/contents/create.php') ?>" 
            class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow">
-            + Add Content
+            + Add
         </a>
     </div>
 
@@ -67,7 +61,7 @@ $categories = $pdo->query("
             <!-- Category -->
             <div>
                 <label class="block text-sm mb-2 font-medium">Category</label>
-                <select id="content_category_id" class="filterable_input border rounded-lg px-4 py-2 w-full">
+                <select id="content_category_id" class="filterable_input border rounded-lg px-4 py-2 w-full" onchange="categoryChanged()">
                     <option value="">All Categories</option>
                     <?php foreach ($categories as $category): ?>
                         <option value="<?= $category['id'] ?>">
@@ -228,7 +222,7 @@ $categories = $pdo->query("
 
                 <!-- Footer -->
                 <div class="border-t px-6 py-4 flex justify-end gap-3">
-                    <button onclick="generateSelectedPost()" 
+                    <button onclick="generateAgain()" 
                             class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-lg">
                         Generate Again
                     </button>
@@ -273,11 +267,7 @@ window.onload = () => {
     index();
 };
 
-/*
-|--------------------------------------------------------------------------
-| Events
-|--------------------------------------------------------------------------
-*/
+/* Events */
 rowsInput.addEventListener('change', index);
 
 filters.forEach(item => {
@@ -291,11 +281,7 @@ qs('#clearFilterBtn').onclick = function() {
     index();
 };
 
-/*
-|--------------------------------------------------------------------------
-| Load Data
-|--------------------------------------------------------------------------
-*/
+/* Load Data */
 async function index(page = 1) {
     let query = `rows_per_page=${rowsInput.value}&page=${page}`;
 
@@ -310,13 +296,13 @@ async function index(page = 1) {
     const response = await fetch(Endpoint + '?' + query);
     const data = await response.json();
 
-    // Update Statistics
+    /* Update Statistics */
     qs('#totalContents').innerText = data.records.total;
     qs('#completedContents').innerText = data.statistics.completed;
     qs('#pendingContents').innerText = data.statistics.pending;
     qs('#failedContents').innerText = data.statistics.failed;
 
-    // Render Cards
+    /* Render Cards */
     grid.innerHTML = '';
 
     if (data.records.data.length === 0) {
@@ -334,11 +320,7 @@ async function index(page = 1) {
     renderPagination(data.records.current_page, data.records.last_page);
 }
 
-/*
-|--------------------------------------------------------------------------
-| Pagination
-|--------------------------------------------------------------------------
-*/
+/* Pagination */
 function renderPagination(current, last) {
     let html = `<div class="text-sm text-gray-500">Page ${current} of ${last}</div><div class="space-x-2">`;
 
@@ -353,11 +335,7 @@ function renderPagination(current, last) {
     qs('#pagination').innerHTML = html;
 }
 
-/*
-|--------------------------------------------------------------------------
-| Render Content Card
-|--------------------------------------------------------------------------
-*/
+/* Render Content Card */
 function renderCard(row) {
     const image = row.image_path 
         ? asset(row.image_path) 
@@ -369,6 +347,8 @@ function renderCard(row) {
             ${row.category_name ?? 'Unknown'}
         </span>`;
 
+     const category = qs('#content_category_id').value;
+
     let statusBadge = '';
     switch (row.status) {
         case 'Completed': statusBadge = `<span class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-medium">Completed</span>`; break;
@@ -378,7 +358,7 @@ function renderCard(row) {
     }
 
     grid.innerHTML += `
-    <div class="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden">
+    <div id="card-${row.uuid}" class="content-card bg-white rounded-xl shadow hover:shadow-lg transition-all duration-200 overflow-hidden">
         <!-- Image -->
         <div class="h-52 bg-gray-100 overflow-hidden">
             <img src="${image}" class="w-full h-full object-cover" loading="lazy">
@@ -419,8 +399,10 @@ function renderCard(row) {
                 <div class="flex items-start justify-between gap-3">
                     <div>
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" class="content_checkbox" value="${row.uuid}" onchange="toggleSelection(this)">
-                            <span>Select</span>
+                            <input type="checkbox" class="content_checkbox" value="${row.uuid}" onchange="toggleSelection(this)" ${!category ? 'disabled' : ''}>
+                            <span class="${!category ? 'text-gray-400 cursor-not-allowed' : 'text-gray-900'}">
+                                Select
+                            </span>
                         </label>
                         <div class="mt-2 text-xs text-gray-500">
                             ${CUSTOM_DATE_TIME(row.created_at)}
@@ -445,11 +427,7 @@ function renderCard(row) {
     </div>`;
 }
 
-/*
-|--------------------------------------------------------------------------
-| Helper Functions
-|--------------------------------------------------------------------------
-*/
+/* Helper Functions */
 function truncate(text, length = 120) {
     if (!text) return '';
     text = text.replace(/(<([^>]+)>)/ig, '');
@@ -467,27 +445,75 @@ function escapeHtml(text) {
         .replace(/'/g, "&#039;");
 }
 
-function toggleSelection(el) {
-    if (el.checked) {
-        if (!selectedContents.includes(el.value)) selectedContents.push(el.value);
-    } else {
-        selectedContents = selectedContents.filter(x => x !== el.value);
+function toggleSelection(el)
+{
+    const card = qs('#card-' + el.value);
+
+    if (el.checked)
+    {
+        if (!selectedContents.includes(el.value))
+        {
+            selectedContents.push(el.value);
+        }
+
+        card.classList.add(
+            'ring-4',
+            'ring-purple-500',
+            'shadow-2xl',
+            'scale-[1.01]'
+        );
     }
+    else
+    {
+        selectedContents = selectedContents.filter(x => x !== el.value);
+        card.classList.remove(
+            'ring-4',
+            'ring-purple-500',
+            'shadow-2xl',
+            'scale-[1.01]'
+        );
+    }
+
     updateBulkBar();
 }
 
 function updateBulkBar() {
     qs('#selectedCount').innerText = selectedContents.length;
-    // qs('#bulkActionBar').classList.toggle('hidden', selectedContents.length === 0);
 }
 
-function clearSelection() {
+function clearSelection()
+{
     selectedContents = [];
-    qsa('.content_checkbox').forEach(cb => cb.checked = false);
+    qsa('.content_checkbox').forEach(cb => {
+        cb.checked = false;
+        qs('#card-' + cb.value)?.classList.remove(
+            'ring-4',
+            'ring-purple-500',
+            'shadow-2xl',
+            'scale-[1.01]'
+        );
+
+    });
+
     updateBulkBar();
 }
+
+function categoryChanged()
+{
+    clearSelection();
+    index();
+}
+
 async function generateSelectedPost()
 {
+    const category = qs('#content_category_id').value;
+
+    if(category === '')
+    {
+        alert('Please select a content category first.');
+        return;
+    }
+
     if (selectedContents.length === 0)
     {
         alert('Select at least one content.');
@@ -546,15 +572,9 @@ function openGeneratePostModal(post)
     }
 }
 
-/*
-|--------------------------------------------------------------------------
-| Save Generated Social Post
-|--------------------------------------------------------------------------
-*/
-
+/* Save Generated Social Post */
 async function saveGeneratedPost()
 {
-    
     try
     {
         const form = new FormData();
@@ -563,30 +583,11 @@ async function saveGeneratedPost()
             form.append('uuids[]', uuid);
         });
 
-        form.append(
-            'caption',
-            qs('#modal_caption').value
-        );
-
-        form.append(
-            'image_path',
-            qs('#modal_image_path').value
-        );
-
-        form.append(
-            'hashtags',
-            qs('#modal_hashtags').value
-        );
-
-        form.append(
-            'keywords',
-            qs('#modal_keywords').value
-        );
-
-        form.append(
-            'status',
-            qs('#modal_status').value
-        );
+        form.append('caption', qs('#modal_caption').value);
+        form.append('image_path', qs('#modal_image_path').value);
+        form.append('hashtags', qs('#modal_hashtags').value);
+        form.append('keywords', qs('#modal_keywords').value);
+        form.append('status', qs('#modal_status').value);
 
         const response = await fetch(
             APP_URL + 'pages/social-posts/save.php',
@@ -598,16 +599,15 @@ async function saveGeneratedPost()
 
         const data = await response.json();
 
-        if(!data.success)
+        if (!data.success)
         {
             alert(data.message);
             return;
         }
-
         alert('Social post saved successfully.');
+        qs('#modal_image_path').value = '';
         closeGeneratePostModal();
         clearSelection();
-
         index();
     }
     catch(error)
@@ -617,12 +617,44 @@ async function saveGeneratedPost()
     }
 }
 
-/*
-|--------------------------------------------------------------------------
-| Modal Helpers
-|--------------------------------------------------------------------------
-*/
+async function deleteGeneratedImage()
+{
+    const imagePath = qs('#modal_image_path').value;
+    if (!imagePath) {
+        return;
+    }
+    try
+    {
+        const form = new FormData();
+        form.append('image_path', imagePath);
 
+        await fetch(
+            APP_URL + 'api/social-posts/delete-generated-image.php',
+            {
+                method: 'POST',
+                body: form
+            }
+        );
+    }
+    catch (e)
+    {
+        console.error(e);
+    }
+
+    /* Clear Image Preview */
+    qs('#modal_image_path').value = '';
+    qs('#modal_image_preview').src = '';
+    qs('#modal_image_preview').classList.add('hidden');
+    qs('#modal_image_placeholder').classList.remove('hidden');
+}
+
+async function generateAgain()
+{
+    deleteGeneratedImage();
+    generateSelectedPost();
+}
+
+/* Modal Helpers */
 function showPostLoading()
 {
     qs('#postLoading').classList.remove('hidden');
@@ -635,9 +667,11 @@ function hidePostLoading()
 
 function closeGeneratePostModal()
 {
+    deleteGeneratedImage();
     qs('#generatePostModal').classList.add('hidden');
 }
 </script>
+
 <?php
 require_once INCLUDE_PATH . '/footer.php';
 ?>

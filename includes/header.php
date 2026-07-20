@@ -23,11 +23,7 @@
 </head>
 
 <body class="bg-gray-100">
-
 <?php include 'navbar.php'; ?>
-
 <div class="flex">
-
     <?php include 'sidebar.php'; ?>
-
     <main class="flex-1 p-8">

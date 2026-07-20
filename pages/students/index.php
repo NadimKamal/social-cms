@@ -9,95 +9,48 @@ require_once INCLUDE_PATH . '/header.php';
 
     <!-- Page Header -->
     <div class="flex items-center justify-between mb-6">
-
         <div>
-            <h1 class="text-3xl font-bold text-gray-800">
-                Students
-            </h1>
-
-            <p class="text-gray-500 mt-1">
-                Manage all students from here.
-            </p>
+            <h1 class="text-3xl font-bold text-gray-800">Students</h1>
+            <p class="text-gray-500 mt-1">Manage all students from here.</p>
         </div>
 
-        <a href="<?= url('pages/students/create.php') ?>"
-            class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg shadow">
-            + Add Student
+        <a href="<?= url('pages/students/create.php') ?>" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg shadow">
+            + Add
         </a>
-
     </div>
 
     <!-- Search -->
     <div class="bg-white rounded-xl shadow p-5 mb-6">
         <div class="flex items-center gap-3">
-            <select id="numberOfRowsPerPage"
-                class="border rounded-lg px-3 py-2">
-
+            <select id="numberOfRowsPerPage" class="border rounded-lg px-3 py-2">
                 <option value="5">5</option>
                 <option value="10">10</option>
                 <option value="15" selected>15</option>
                 <option value="25">25</option>
-
             </select>
 
-            <input
-                type="text"
-                id="title_like"
-                class="filterable_input flex-1 border rounded-lg px-4 py-2"
-                placeholder="Search title...">
+            <input type="text" id="title_like" class="filterable_input flex-1 border rounded-lg px-4 py-2" placeholder="Search title...">
 
-            <button
-                id="clearFilterBtn"
-                class="bg-gray-700 text-white px-5 py-2 rounded-lg">
-                Clear
-            </button>
-
+            <button id="clearFilterBtn" class="bg-gray-700 text-white px-5 py-2 rounded-lg">Clear</button>
         </div>
-
     </div>
 
     <!-- Table -->
     <div class="bg-white rounded-xl shadow overflow-hidden">
-
-    <table class="min-w-full">
-
-        <thead class="bg-gray-100">
-
-            <tr>
-
-                <th class="px-4 py-3 w-20">#</th>
-
-                <th class="px-4 py-3">
-                    Picture
-                </th>
-
-                <th class="px-4 py-3">
-                    Title
-                </th>
-
-                <th class="px-4 py-3">
-
-                    Created At
-
-                </th>
-
-                <th class="px-4 py-3 text-center">
-
-                    Action
-
-                </th>
-
-            </tr>
-
-        </thead>
-
-        <tbody id="tbody">
-
-        </tbody>
-
-    </table>
-
-</div>
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="px-6 py-3 w-8 text-left">#</th>
+                    <th class="px-6 py-3 w-20 text-center">Picture</th>
+                    <th class="px-6 py-3 w-32 text-left">Title</th>
+                    <th class="px-6 py-3 w-20 text-left">Created At</th>
+                    <th class="px-6 py-3 w-20 text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody id="tbody" class="divide-y divide-gray-200">
+            </tbody>
+        </table>
+    </div>
 
     <!-- Pagination -->
     <div id="pagination" class="flex justify-between items-center mt-6"></div>
@@ -105,102 +58,75 @@ require_once INCLUDE_PATH . '/header.php';
 </div>
 
 <script>
-    const Endpoint = "<?= url('api/students/get-data.php') ?>";
-    const tbody = document.querySelector('#tbody');
-    const rowsInput = document.querySelector('#numberOfRowsPerPage');
-    const filters = document.querySelectorAll('.filterable_input');
-    window.onload = () => {
-        index();
-    };
+const Endpoint = "<?= url('api/students/get-data.php') ?>";
+const tbody = document.querySelector('#tbody');
+const rowsInput = document.querySelector('#numberOfRowsPerPage');
+const filters = document.querySelectorAll('.filterable_input');
 
-    rowsInput.addEventListener('change', index);
+window.onload = () => index();
 
-    filters.forEach(input => {
-        input.addEventListener(
-            'keyup',
-            delay(index,500)
-        );
+rowsInput.addEventListener('change', index);
 
+filters.forEach(input => {
+    input.addEventListener('keyup', delay(index, 500));
+});
+
+document.querySelector('#clearFilterBtn').onclick = function() {
+    filters.forEach(item => item.value = '');
+    index();
+};
+
+async function index(page = 1) {
+    let query = 'rows_per_page=' + rowsInput.value + '&page=' + page;
+
+    let filterColumns = '';
+    filters.forEach(item => {
+        filterColumns += item.id + '=>' + item.value + '|';
     });
 
-    document.querySelector('#clearFilterBtn').onclick=function(){
-        filters.forEach(item=>item.value='');
-        index();
+    query += '&filterable_columns=' + filterColumns;
 
+    tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-12 text-center text-gray-500">Loading...</td></tr>';
+
+    const response = await fetch(Endpoint + '?' + query);
+    const data = await response.json();
+
+    let sl = (data.sl || 0) + 1;
+    tbody.innerHTML = '';
+
+    if (data.records.data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-gray-500">No students found.</td></tr>`;
+        return;
     }
 
-    async function index(page=1){
-
-        let query='rows_per_page='+rowsInput.value;
-
-        query+='&page='+page;
-
-        let filterColumns='';
-
-        filters.forEach(item=>{
-
-            filterColumns+=item.id+'=>'+item.value+'|';
-
-        });
-
-        query+='&filterable_columns='+filterColumns;
-
-        tbody.innerHTML='';
-
-        const response=await fetch(Endpoint+'?'+query);
-
-        const data=await response.json();
-
-        let sl=data.sl+1;
-
-        data.records.data.forEach(row=>{
-            
-            tbody.innerHTML+=`
-
-            <tr class="border-t hover:bg-gray-50">
-
-                <td class="px-4 py-4">${sl++}</td>
-
-                <td class="px-4 py-4">
-                    <img src="${asset(row.picture)}" class="w-14 h-14 rounded object-cover border">
+    data.records.data.forEach(row => {
+        const picture = row.picture ? asset(row.picture) : asset('assets/images/default/dp.png');
+        tbody.innerHTML += `
+            <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 text-gray-500">${sl++}</td>
+                <td class="px-6 py-4 text-center">
+                    <img src="${picture}" class="w-14 h-14 rounded object-cover border mx-auto">
                 </td>
-
-                <td class="px-4 py-4">
-                    ${row.title}
+                <td class="px-6 py-4 font-medium">${row.title}</td>
+                <td class="px-6 py-4 text-gray-600">${CUSTOM_DATE_TIME(row.created_at)}</td>
+                <td class="px-6 py-4 text-center">
+                    <a href="<?= url('pages/students/edit.php?id=') ?>${row.id}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded text-sm">Edit</a>
+                    <a href="<?= url('pages/students/delete.php?id=') ?>${row.id}" onclick="return confirm('Delete this student?')" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm ml-2">Delete</a>
                 </td>
-
-                <td>${CUSTOM_DATE_TIME(row.created_at)}</td>
-
-                <td class="px-4 py-4 text-center">
-                    <a href="<?= url('pages/students/edit.php?id=') ?>${row.id}" class="bg-yellow-500 text-white px-3 py-2 rounded"> Edit </a>
-                    <a href="<?= url('pages/students/delete.php?id=') ?>${row.id}" onclick="return confirm('Delete this student?')" class="bg-red-600 text-white px-3 py-2 rounded ml-2"> Delete </a>
-                </td>
-
             </tr>
+        `;
+    });
+}
 
-            `;
-
-        });
-
-    }
-
-    function delay(fn,ms){
-
-        let timer=0;
-
-        return function(){
-
-            clearTimeout(timer);
-
-            timer=setTimeout(fn,ms);
-
-        }
-
-    }
-
+function delay(fn, ms) {
+    let timer = 0;
+    return function() {
+        clearTimeout(timer);
+        timer = setTimeout(fn, ms);
+    };
+}
 </script>
+
 <?php
-
 require_once '../../includes/footer.php';
-
 ?>

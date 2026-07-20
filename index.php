@@ -115,9 +115,9 @@ $publishedPosts = $pdo->query("
                 AI Content Inbox
             </a>
 
-            <a href="<?= url('pages/contents/create.php') ?>" 
+            <a href="<?= url('pages/social-posts/index.php') ?>" 
                class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg p-5 text-center transition">
-                Add Content
+                Social Posts
             </a>
 
             <a href="<?= url('pages/social-accounts/index.php') ?>" 

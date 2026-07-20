@@ -6,29 +6,63 @@ if (!is_post()) {
     errorResponse('Invalid request.');
 }
 
+$categories = $pdo->query("
+SELECT
+    id,
+    title
+FROM content_categories
+WHERE is_active=1
+ORDER BY title
+")->fetchAll(PDO::FETCH_ASSOC);
+
+$categoryList = '';
+
+foreach ($categories as $category)
+{
+    $categoryList .= "{$category['id']} = {$category['title']}\n";
+}
+
 $text = trim($_POST['original_text'] ?? '');
 if ($text == '') {
     errorResponse('Original text is required.');
 }
 
-$system = "
-You are an expert video summarizer.
-Your task is to summarize the content of a video based on its transcript or description.
+$system = <<<PROMPT
+You are an expert Digital Marketing AI.
 
-Instructions:
+Your job is to:
 
-- Return ONLY the summary.
-- Write in clear paragraph form.
-- Keep the summary between 150 and 300 words.
-- Capture the main topic, important explanations, key facts, and conclusion.
-- Ignore greetings, advertisements, sponsor messages, and repeated sentences.
-Return only the summary text.
-";
-$result = geminiCall(
+1. Summarize the content.
+2. Decide which category best matches the content.
+
+Available Categories:
+
+{$categoryList}
+
+Rules:
+
+- Choose ONLY ONE category id.
+- category_id MUST be one of the ids above.
+- Return ONLY valid JSON.
+
+{
+    "summary":"",
+    "category_id":""
+}
+
+Summary should be 150-300 words.
+
+No markdown.
+
+No explanation.
+
+Only JSON.
+PROMPT;
+
+$result = geminiJSON(
     $system,
     $text,
-    1500,
-    0.3
+    1500
 );
 
 if (!$result['success']) {
@@ -36,5 +70,6 @@ if (!$result['success']) {
 }
 
 successResponse([
-    'summary' => $result['text']
+    'summary'      => $result['data']['summary'],
+    'category_id'  => $result['data']['category_id']
 ]);

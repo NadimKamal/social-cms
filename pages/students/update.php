@@ -11,34 +11,31 @@ $title = trim($_POST['title'] ?? '');
 $oldPicture = $_POST['old_picture'] ?? '';
 
 if ($id <= 0) {
-    die('Invalid Student ID.');
+    toast('error', 'Invalid Student ID.');
+    redirect('pages/students/edit.php');
 }
 
 if ($title == '') {
-    die('Student title is required.');
+    toast('warning', 'Student title is required.');
+    redirect('pages/students/edit.php');
 }
 
 // Get Existing Student
-
 $stmt = $pdo->prepare("SELECT * FROM students WHERE id = ?");
 $stmt->execute([$id]);
 
 $student = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$student) {
-    die('Student not found.');
+    toast('error', 'Student not found.');
+    redirect('pages/students/index.php');
 }
 
 // Upload New Image (If Selected)
-
 $picture = $oldPicture;
 
-if (
-    isset($_FILES['picture']) &&
-    $_FILES['picture']['error'] === UPLOAD_ERR_OK
-) {
+if (isset($_FILES['picture']) && $_FILES['picture']['error'] === UPLOAD_ERR_OK) {
     deleteImage($oldPicture);
-
     $picture = uploadImage($_FILES['picture'], 'students');
 }
 
@@ -57,5 +54,7 @@ $stmt->execute([
     now(),
     $id
 ]);
+
+toast('success', 'Student updated successfully.');
 
 redirect('pages/students/index.php');
