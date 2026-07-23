@@ -1,15 +1,14 @@
 <?php
-
+$pageTitle = 'Create Student';
 require_once __DIR__ . '/../../bootstrap/app.php';
 require_once INCLUDE_PATH . '/header.php';
-
 ?>
 
 <div class="max-w-5xl mx-auto px-6 py-8">
 
     <div class="flex items-center justify-between mb-6">
         <div>
-            <h1 class="text-3xl font-bold text-gray-800">Create Student</h1>
+            <h1 class="text-3xl font-bold text-gray-800"><?= e($pageTitle ?? 'Social CMS') ?></h1>
             <p class="text-gray-500 mt-1">Add a new student.</p>
         </div>
 
@@ -67,5 +66,5 @@ picture.addEventListener('change', function() {
 </script>
 
 <?php
-require_once '../../includes/footer.php';
+require_once INCLUDE_PATH . '/footer.php';
 ?>

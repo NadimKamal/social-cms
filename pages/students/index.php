@@ -1,5 +1,5 @@
 <?php
-
+$pageTitle = 'Students';
 require_once __DIR__ . '/../../bootstrap/app.php';
 require_once INCLUDE_PATH . '/header.php';
 
@@ -10,7 +10,7 @@ require_once INCLUDE_PATH . '/header.php';
     <!-- Page Header -->
     <div class="flex items-center justify-between mb-6">
         <div>
-            <h1 class="text-3xl font-bold text-gray-800">Students</h1>
+            <h1 class="text-3xl font-bold text-gray-800"><?= e($pageTitle ?? 'Social CMS') ?></h1>
             <p class="text-gray-500 mt-1">Manage all students from here.</p>
         </div>
 
@@ -128,5 +128,5 @@ function delay(fn, ms) {
 </script>
 
 <?php
-require_once '../../includes/footer.php';
+require_once INCLUDE_PATH . '/footer.php';
 ?>

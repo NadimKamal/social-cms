@@ -120,6 +120,30 @@ CREATE TABLE social_post_contents (
 DEFAULT CHARSET=utf8mb4 
 COLLATE=utf8mb4_unicode_ci;
 
+/* users */
+CREATE TABLE users (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    uuid CHAR(36) NOT NULL UNIQUE,
+    sys_id VARCHAR(36) NOT NULL UNIQUE,
+    user_type ENUM('Person','Company') NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    phone VARCHAR(30) DEFAULT NULL,
+    password VARCHAR(255) NOT NULL,
+    picture VARCHAR(255) DEFAULT NULL,
+    email_verified_at DATETIME DEFAULT NULL,
+    last_login_at DATETIME DEFAULT NULL,
+    status ENUM('Active','Inactive','Blocked') NOT NULL DEFAULT 'Active',
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME DEFAULT NULL,
+    INDEX idx_username (username),
+    INDEX idx_email (email),
+    INDEX idx_sys_id (sys_id),
+    INDEX idx_status (status),
+    INDEX idx_user_type (user_type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 /* Default Categories */
 INSERT INTO content_categories (uuid, title, description, color, icon, is_active)
 VALUES

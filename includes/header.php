@@ -4,12 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Social CMS</title>
-    <link rel="stylesheet" href="<?= APP_URL ?>assets/css/font-awesome.min.css" />
+    <title><?= isset($pageTitle) && $pageTitle !== '' ? e($pageTitle) . ' | Social CMS' : 'Social CMS' ?></title>
+    <link rel="icon" href="<?= APP_URL ?>assets/icons/default/social.png" />
+    <link rel="stylesheet" href="<?= APP_URL ?>assets/css/font-awesome/all.min.css">
     <script src="<?= APP_URL ?>assets/js/tailwind.min.js"></script>
     <script src="<?= APP_URL ?>assets/js/helper.js"></script>
+
     <script>
         const APP_URL = "<?= APP_URL ?>";
+
         tailwind.config = {
             theme: {
                 extend: {
@@ -23,7 +26,17 @@
 </head>
 
 <body class="bg-gray-100">
-<?php include 'navbar.php'; ?>
+
+<?php include INCLUDE_PATH . '/navbar.php'; ?>
+
+<?php if (isLoggedIn()) : ?>
+
 <div class="flex">
-    <?php include 'sidebar.php'; ?>
+    <?php include INCLUDE_PATH . '/sidebar.php'; ?>
     <main class="flex-1 p-8">
+
+<?php else : ?>
+
+<main class="min-h-screen">
+
+<?php endif; ?>

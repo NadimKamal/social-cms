@@ -1,5 +1,5 @@
 <?php
-
+$pageTitle = 'Edit Student';
 require_once __DIR__ . '/../../bootstrap/app.php';
 require_once INCLUDE_PATH . '/header.php';
 
@@ -23,7 +23,7 @@ if (!$student) {
 <div class="max-w-5xl mx-auto px-6 py-8">
     <div class="flex items-center justify-between mb-6">
         <div>
-            <h1 class="text-3xl font-bold text-gray-800">Edit Student</h1>
+            <h1 class="text-3xl font-bold text-gray-800"><?= e($pageTitle ?? 'Social CMS') ?></h1>
             <p class="text-gray-500 mt-1">Update student information.</p>
         </div>
 

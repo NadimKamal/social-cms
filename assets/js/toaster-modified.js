@@ -1,4 +1,4 @@
-// Default Toaster
+// Modified Toaster
 (() => {
 
     class Toaster {
@@ -24,24 +24,24 @@
 
             /* Icons */
             this.icons = {
-                success: `<svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`,
-                error: `<svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>`,
-                warning: `<svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18A2 2 0 003.53 21h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>`,
-                info: `<svg class="w-6 h-6 text-sky-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg>`,
-                primary: `<svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg>`,
-                secondary: `<svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>`,
-                dark: `<svg class="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.35 15.04A9 9 0 118.96 3.65 7 7 0 0020.35 15.04z"/></svg>`
+                success: `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`,
+                error: `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>`,
+                warning: `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18A2 2 0 003.53 21h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>`,
+                info: `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg>`,
+                primary: `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg>`,
+                secondary: `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>`,
+                dark: `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.35 15.04A9 9 0 118.96 3.65 7 7 0 0020.35 15.04z"/></svg>`
             };
 
             /* Colors */
             this.styles = {
-                success: { strip: 'bg-green-500', bg: 'bg-green-50', text: 'text-green-900', progress: 'bg-green-500' },
-                error: { strip: 'bg-red-500', bg: 'bg-red-50', text: 'text-red-900', progress: 'bg-red-500' },
-                warning: { strip: 'bg-amber-500', bg: 'bg-amber-50', text: 'text-amber-900', progress: 'bg-amber-500' },
-                info: { strip: 'bg-sky-500', bg: 'bg-sky-50', text: 'text-sky-900', progress: 'bg-sky-500' },
-                primary: { strip: 'bg-blue-600', bg: 'bg-blue-50', text: 'text-blue-900', progress: 'bg-blue-600' },
-                secondary: { strip: 'bg-gray-500', bg: 'bg-gray-100', text: 'text-gray-900', progress: 'bg-gray-500' },
-                dark: { strip: 'bg-gray-900', bg: 'bg-gray-800', text: 'text-white', progress: 'bg-white' }
+                success: { strip: 'bg-green-600', bg: 'bg-green-600', text: 'text-white', progress: 'bg-green-600' },
+                error: { strip: 'bg-red-600', bg: 'bg-red-600', text: 'text-white', progress: 'bg-red-600' },
+                warning: { strip: 'bg-amber-600', bg: 'bg-amber-600', text: 'text-white', progress: 'bg-amber-600' },
+                info: { strip: 'bg-sky-600', bg: 'bg-sky-600', text: 'text-white', progress: 'bg-sky-600' },
+                primary: { strip: 'bg-blue-600', bg: 'bg-blue-600', text: 'text-white', progress: 'bg-blue-600' },
+                secondary: { strip: 'bg-gray-600', bg: 'bg-gray-600', text: 'text-white', progress: 'bg-gray-600' },
+                dark: { strip: 'bg-gray-800', bg: 'bg-gray-800', text: 'text-white', progress: 'bg-gray-800' }
             };
 
             this.createContainer();
@@ -141,7 +141,7 @@
                         <div class="flex items-start gap-3">
                             <div class="text-xl font-bold leading-none mt-0.5">${this.icons[toast.type]}</div>
                             <div class="flex-1 text-sm leading-6 break-words">${toast.message}</div>
-                            <button class="toast-close text-gray-400 hover:text-red-600 text-xl leading-none transition">&times;</button>
+                            <button class="toast-close text-white hover:text-red-100 text-xl leading-none transition">&times;</button>
                         </div>
                     </div>
                 </div>

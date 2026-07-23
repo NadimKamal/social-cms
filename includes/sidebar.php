@@ -7,7 +7,7 @@
     </div>
 
     <nav class="px-4">
-        <a href="<?= url('index.php') ?>" 
+        <a href="<?= url('pages/dashboard/index.php') ?>" 
            class="block py-3 px-4 rounded hover:bg-gray-700">
             Dashboard
         </a>

@@ -1,6 +1,6 @@
 <?php
+require_once __DIR__ . '/../../bootstrap/app.php';
 $pageTitle = 'Dashboard';
-require_once __DIR__ . '/bootstrap/app.php';
 require_once INCLUDE_PATH . '/header.php';
 
 // Dashboard Statistics
@@ -151,5 +151,5 @@ $publishedPosts = $pdo->query("
 </div>
 
 <?php
-require_once 'includes/footer.php';
+require_once INCLUDE_PATH . '/footer.php';
 ?>

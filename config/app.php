@@ -23,6 +23,7 @@ define('APP_URL', rtrim(env('APP_URL'), '/') . '/');
 define('CONFIG_PATH', ROOT_PATH . '/config');
 define('INCLUDE_PATH', ROOT_PATH . '/includes');
 define('SERVICE_PATH', ROOT_PATH . '/services');
+define('MIDDLEWARE_PATH', ROOT_PATH . '/middleware');
 define('ASSET_PATH', ROOT_PATH . '/assets');
 define('UPLOAD_PATH', ROOT_PATH . '/uploads');
 define('STORAGE_PATH', ROOT_PATH . '/storage');

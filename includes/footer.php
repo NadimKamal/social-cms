@@ -1,5 +1,13 @@
-</main>
+<?php if (isLoggedIn()) : ?>
+
+    </main>
 </div>
+
+<?php else : ?>
+
+    </main>
+
+<?php endif; ?>
 
 <footer class="bg-white border-t">
     <div class="text-center py-6">
@@ -15,7 +23,7 @@ if ($toast):
 ?>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    toaster.<?= $toast['type'] ?>(
+    toaster.<?= e($toast['type']) ?>(
         <?= json_encode($toast['message']) ?>
     );
 });
